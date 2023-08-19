@@ -16,9 +16,9 @@ token,receiver,flowRate,startTs,cliffTs,cliffAmount,endTs
 
 You can generate such csv files with whatever tool you prefer.
 
-Bundled is a simple generator script for creating sample csv files. Example invocation for creating a file `batch2.csv` describing 2 vesting schedules:
+Bundled is a simple generator script for creating sample csv files. Example invocation for creating a file `batch.csv` describing 2 vesting schedules:
 ```
-node create-sample-csv.js batch2.csv 2
+node create-sample-csv.js batch.csv 2
 ```
 This generator script creates items with the same vesting parameters, only the receiver (randomly generated addresses) changes.  
 You can override the other parameters with env vars, see the script's source code.
