@@ -45,7 +45,7 @@ Then confirm with "Create Batch":
 ![Transaction Builder Create Batch](tx-builder-create.png)
 
 Next you can review the included transactions by clicking the expand arrow:
-![Transaction Builder Review](tx-builder-create.png)
+![Transaction Builder Review](tx-builder-review.png)
 
 Next you can _Simulate_ the transaction in order to check if it would succeed, and finally propose it to the multisig by clicking _Send Batch_.  
 From here on, the process is the same as with any other Safe transaction: collect enough signatures and execute.
