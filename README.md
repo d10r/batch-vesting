@@ -1,29 +1,70 @@
 # About
 
-This is a small nodejs based cmdline application for batching the creation of many Superfluid Vesting Schedules from a (Gnosis) Safe into one transaction.  
+This repo contains helpers for batching the creation of many Superfluid Vesting Schedules from a (Gnosis) Safe into one transaction.  
 Example transaction creating 200 vesting schedules: https://goerli.etherscan.io/tx/0x7abe16abb948137a7f2ede0e75694121dff77feca9a87b76118efef7b52277b3  
 Note that the gas used here was slightly above 8M. That should give you a good idea for what batch size fits into a tx based on the block gas limit of the chain.
 
 The application was tested with nodejs v18.  
 Do `yarn install` in order to get dependencies installed.
 
-Vesting schedules are loaded from a csv file. The file name must be provided as argument.  
-The env arguments `RPC` (url), `SAFE` (address) and `PRIVKEY` (private key of one of the Safe signers) must be set.
+## Data source
+
+The data is loaded from a csv file. Here's an example with 2 items:
+```
+token,receiver,flowRate,startTs,cliffTs,cliffAmount,endTs
+0x8ae68021f6170e5a766be613cea0d75236ecca9a,0xa87fb5f93f76aac7573559eca1fa27610e7efb15,3805175038,1692539417,0,0,1724075417
+0x8ae68021f6170e5a766be613cea0d75236ecca9a,0xeece40e5bb700335c0bc66d09ba9c6c859dd7125,3805175038,1692539417,0,0,1724075417
+```
+
+You can generate such csv files with whatever tool you prefer.
+
+Bundled is a simple generator script for creating sample csv files. Example invocation for creating a file `batch2.csv` describing 2 vesting schedules:
+```
+node create-sample-csv.js batch2.csv 2
+```
+This generator script creates items with the same vesting parameters, only the receiver (randomly generated addresses) changes.  
+You can override the other parameters with env vars, see the script's source code.
+
+If you want to execute such a test batch on another chain than goerli, you need to override the token address (you can find SuperToken addresses in the [Superfluid Console](https://console.superfluid.finance/matic/supertokens)).
+
+## create-txbuilder-json.js
+
+This script transforms a csv file as described above to a json file which can be loaded by the [Safe Transaction Builder](https://help.safe.global/en/articles/40841-transaction-builder).
+
+Required arguments are the chainId where the transactions shall be executed, and the path to the csv file.
 
 Example invocation:
 ```
-RPC=https://rpc.ankr.com/eth_goerli SAFE=0x18A6dBAA09317C352CAd15F03A13F1f38862d124 PRIVKEY=fd63bf5836257048dbdc0d28566cfbb7276c847225b3c16ffe9d04d88009e800 node batch-vesting.js batch.csv
+node create-txbuilder-json.js 5 batch.csv
+```
+This will create a file `batch.json` which can be executed by a Safe on Goerli (chainId 5).  
+The output filename is always the same as the input file, but with `.json` suffix.
+
+After creating the json file, you can import it into your Safe Transaction builder with drag'n drop or file selector:
+![Transaction Builder Import](tx-builder-import.png)
+
+Then confirm with "Create Batch":
+![Transaction Builder Create Batch](tx-builder-create.png)
+
+Next you can review the included transactions by clicking the expand arrow:
+![Transaction Builder Review](tx-builder-create.png)
+
+Next you can _Simulate_ the transaction in order to check if it would succeed, and finally propose it to the multisig by clicking _Send Batch_.  
+From here on, the process is the same as with any other Safe transaction: collect enough signatures and execute.
+
+## propose-multicall.js
+
+This script requires a private key which is co-owner of the sender Safe. It uses [Multicall3](https://github.com/mds1/multicall) for batching.  
+It creates the transaction data, signs it and proposes it for co-signing and execution using the Safe transaction service.
+
+A csv file containing vesting schedules must be provided as argument.  
+The env arguments `RPC` (url), `SAFE` (address) and `PRIVKEY` (private key of one of the Safe signers) must also be set.
+
+Example invocation:
+```
+RPC=https://rpc.ankr.com/eth_goerli SAFE=0x18A6dBAA09317C352CAd15F03A13F1f38862d124 PRIVKEY=fd63bf5836257048dbdc0d28566cfbb7276c847225b3c16ffe9d04d88009e800 node propose-multicall.js batch.csv
 ```
 
-This will batch the invocations to the VestingScheduler contract with [Multicall3](https://github.com/mds1/multicall) and propose it as Safe transaction.  
-At the end of the scripts output you get an URL of the Safe App where to sign and execute the transaction.
-
-In order to find out what `batch.csv` should contain, you can do:
-```
-node create-csv.js batch.csv 10
-```
-This will create a file `batch.csv` with 10 vesting schedules, using random receivers.  
-In order to override the defaults for the other columns, you can set env vars. See the source for more details.  
-If you want to execute such a test batch on another chain than goerli, you need to override the token address (you can find SuperToken addresses [here](https://console.superfluid.finance/matic/supertokens)).
+At the end of the script's output you get an URL of the Safe App where to sign and execute the transaction.
 
 Note that Safe transactions created this way may show a warning "Unexpected delegate call" in the Safe UI. That's because for batching with Multicall to work, the Safe must be instructed to do a delegatecall to the Multicall contract. Otherwise the msg.sender of the individual calls to the Vesting Scheduler would be the Multicall contract, not the Safe contract, and it would fail.
