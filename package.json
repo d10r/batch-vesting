@@ -1,0 +1,20 @@
+{
+  "name": "batch-vesting",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@safe-global/safe-core-sdk": "^3.3.2",
+    "@safe-global/safe-core-sdk-types": "^1.9.0",
+    "@safe-global/safe-service-client": "^2.0.0",
+    "@safe-global/safe-web3-lib": "^1.9.2",
+    "@superfluid-finance/metadata": "^1.1.11",
+    "ethers": "^5.7.2",
+    "papaparse": "^5.4.1",
+    "web3": "^1.9.0"
+  }
+}
