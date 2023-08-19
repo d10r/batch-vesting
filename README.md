@@ -1,8 +1,6 @@
 # About
 
 This repo contains helpers for batching the creation of many Superfluid Vesting Schedules from a (Gnosis) Safe into one transaction.  
-Example transaction creating 200 vesting schedules: https://goerli.etherscan.io/tx/0x7abe16abb948137a7f2ede0e75694121dff77feca9a87b76118efef7b52277b3  
-Note that the gas used here was slightly above 8M. That should give you a good idea for what batch size fits into a tx based on the block gas limit of the chain.
 
 The application was tested with nodejs v18.  
 Do `yarn install` in order to get dependencies installed.
@@ -52,6 +50,9 @@ Next you can review the included transactions by clicking the expand arrow:
 Next you can _Simulate_ the transaction in order to check if it would succeed, and finally propose it to the multisig by clicking _Send Batch_.  
 From here on, the process is the same as with any other Safe transaction: collect enough signatures and execute.
 
+Note that there's a limit to the batch size, although it's not yet clear what it is.  
+A test with 100 vesting schedules per batch were successful while a test with 200 schedules failed (Safe didn't accept the tx, probably due to the calldata size exceeding some limitation).
+
 ## propose-multicall.js
 
 This script requires a private key which is co-owner of the sender Safe. It uses [Multicall3](https://github.com/mds1/multicall) for batching.  
@@ -68,3 +69,6 @@ RPC=https://rpc.ankr.com/eth_goerli SAFE=0x18A6dBAA09317C352CAd15F03A13F1f38862d
 At the end of the script's output you get an URL of the Safe App where to sign and execute the transaction.
 
 Note that Safe transactions created this way may show a warning "Unexpected delegate call" in the Safe UI. That's because for batching with Multicall to work, the Safe must be instructed to do a delegatecall to the Multicall contract. Otherwise the msg.sender of the individual calls to the Vesting Scheduler would be the Multicall contract, not the Safe contract, and it would fail.
+
+With this method, a batch of 200 vesting schedules succeeded: https://goerli.etherscan.io/tx/0x7abe16abb948137a7f2ede0e75694121dff77feca9a87b76118efef7b52277b3  
+Note that the gas used here was slightly above 8M. That should give you a good idea for what batch size fits into a tx based on the block gas limit of the chain.
