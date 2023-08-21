@@ -206,7 +206,7 @@ function getVestingSchedulesFromFile(web3, fileName) {
                 if (isNaN(row.endTs)) {
                     throw new Error("invalid endTs: " + row.endTs);
                 }
-                if (!row.endTs > row.startTs) {
+                if (!(row.endTs > row.startTs)) {
                     throw new Error("endTs must be after startTs");
                 }
 
